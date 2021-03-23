@@ -33,43 +33,45 @@ class DioCacheManager {
   get interceptor {
     if (null == _interceptor) {
       _interceptor = InterceptorsWrapper(
-          onRequest: _onRequest, onResponse: _onResponse, onError: _onError);
+          onRequest: _onRequest, onError: _onError, onResponse: _onResponse);
     }
     return _interceptor;
   }
 
-  _onRequest(RequestOptions options) async {
+  _onRequest(
+      RequestOptions options, RequestInterceptorHandler interceptor) async {
     if ((options.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) != true) {
-      return options;
+      interceptor.next(options);
     }
     if (true == options.extra[DIO_CACHE_KEY_FORCE_REFRESH]) {
-      return options;
+      interceptor.next(options);
     }
     var responseDataFromCache = await _pullFromCacheBeforeMaxAge(options);
     if (null != responseDataFromCache) {
       return _buildResponse(
           responseDataFromCache, responseDataFromCache?.statusCode, options);
     }
-    return options;
+    interceptor.next(options);
   }
 
-  _onResponse(Response response) async {
-    if ((response.request.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) == true &&
+  _onResponse(Response response, ResponseInterceptorHandler interceptor) async {
+    if ((response.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) == true &&
         response.statusCode >= 200 &&
         response.statusCode < 300) {
       await _pushToCache(response);
     }
-    return response;
+    interceptor.resolve(response);
   }
 
-  _onError(DioError e) async {
-    if ((e.request.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) == true) {
-      var responseDataFromCache = await _pullFromCacheBeforeMaxStale(e.request);
+  _onError(DioError e, ErrorInterceptorHandler interceptor) async {
+    if ((e.requestOptions.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) == true) {
+      var responseDataFromCache =
+          await _pullFromCacheBeforeMaxStale(e.requestOptions);
       if (null != responseDataFromCache)
         return _buildResponse(responseDataFromCache,
-            responseDataFromCache?.statusCode, e.request);
+            responseDataFromCache?.statusCode, e.requestOptions);
     }
-    return e;
+    interceptor.next(e);
   }
 
   Response _buildResponse(
@@ -91,6 +93,7 @@ class DioCacheManager {
       data = jsonDecode(utf8.decode(data));
     }
     return Response(
+        requestOptions: options,
         data: data,
         headers: headers,
         extra: options.extra..remove(DIO_CACHE_KEY_TRY_CACHE),
@@ -110,7 +113,7 @@ class DioCacheManager {
   }
 
   Future<bool> _pushToCache(Response response) {
-    RequestOptions options = response.request;
+    RequestOptions options = response.requestOptions;
     Duration maxAge = options.extra[DIO_CACHE_KEY_MAX_AGE];
     Duration maxStale = options.extra[DIO_CACHE_KEY_MAX_STALE];
     if (null == maxAge) {
