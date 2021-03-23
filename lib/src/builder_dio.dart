@@ -45,21 +45,21 @@ Options buildConfigurableCacheOptions(
   } else if (options.responseType == ResponseType.stream) {
     throw Exception("ResponseType.stream is not supported");
   }
-  options.extra!.addAll({DIO_CACHE_KEY_TRY_CACHE: true});
+  options.extra?.addAll({DIO_CACHE_KEY_TRY_CACHE: true});
   if (null != maxAge) {
-    options.extra!.addAll({DIO_CACHE_KEY_MAX_AGE: maxAge});
+    options.extra?.addAll({DIO_CACHE_KEY_MAX_AGE: maxAge});
   }
   if (null != maxStale) {
-    options.extra!.addAll({DIO_CACHE_KEY_MAX_STALE: maxStale});
+    options.extra?.addAll({DIO_CACHE_KEY_MAX_STALE: maxStale});
   }
   if (null != primaryKey) {
-    options.extra!.addAll({DIO_CACHE_KEY_PRIMARY_KEY: primaryKey});
+    options.extra?.addAll({DIO_CACHE_KEY_PRIMARY_KEY: primaryKey});
   }
   if (null != subKey) {
-    options.extra!.addAll({DIO_CACHE_KEY_SUB_KEY: subKey});
+    options.extra?.addAll({DIO_CACHE_KEY_SUB_KEY: subKey});
   }
   if (null != forceRefresh) {
-    options.extra!.addAll({DIO_CACHE_KEY_FORCE_REFRESH: forceRefresh});
+    options.extra?.addAll({DIO_CACHE_KEY_FORCE_REFRESH: forceRefresh});
   }
   return options;
 }
