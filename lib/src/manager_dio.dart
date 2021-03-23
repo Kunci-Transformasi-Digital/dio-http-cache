@@ -42,14 +42,17 @@ class DioCacheManager {
       RequestOptions options, RequestInterceptorHandler interceptor) async {
     if ((options.extra[DIO_CACHE_KEY_TRY_CACHE] ?? false) != true) {
       interceptor.next(options);
+      return;
     }
     if (true == options.extra[DIO_CACHE_KEY_FORCE_REFRESH]) {
       interceptor.next(options);
+      return;
     }
     var responseDataFromCache = await _pullFromCacheBeforeMaxAge(options);
     if (null != responseDataFromCache) {
       interceptor.resolve(_buildResponse(
           responseDataFromCache, responseDataFromCache.statusCode, options));
+      return;
     }
     interceptor.next(options);
   }
@@ -70,6 +73,7 @@ class DioCacheManager {
       if (null != responseDataFromCache)
         interceptor.resolve(_buildResponse(responseDataFromCache,
             responseDataFromCache.statusCode, e.requestOptions));
+      return;
     }
     interceptor.next(e);
   }
