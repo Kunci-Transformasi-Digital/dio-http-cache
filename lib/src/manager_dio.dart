@@ -48,8 +48,8 @@ class DioCacheManager {
     }
     var responseDataFromCache = await _pullFromCacheBeforeMaxAge(options);
     if (null != responseDataFromCache) {
-      return _buildResponse(
-          responseDataFromCache, responseDataFromCache.statusCode, options);
+      interceptor.resolve(_buildResponse(
+          responseDataFromCache, responseDataFromCache.statusCode, options));
     }
     interceptor.next(options);
   }
@@ -68,8 +68,8 @@ class DioCacheManager {
       var responseDataFromCache =
           await _pullFromCacheBeforeMaxStale(e.requestOptions);
       if (null != responseDataFromCache)
-        return _buildResponse(responseDataFromCache,
-            responseDataFromCache.statusCode, e.requestOptions);
+        interceptor.resolve(_buildResponse(responseDataFromCache,
+            responseDataFromCache.statusCode, e.requestOptions));
     }
     interceptor.next(e);
   }
@@ -180,7 +180,8 @@ class DioCacheManager {
     callback(_maxAge, maxStale);
   }
 
-  Duration? _tryGetDurationFromMap(Map<String, String>? parameters, String key) {
+  Duration? _tryGetDurationFromMap(
+      Map<String, String>? parameters, String key) {
     if (null != parameters && parameters.containsKey(key)) {
       var value = int.tryParse(parameters[key]!);
       if (null != value && value >= 0) {
